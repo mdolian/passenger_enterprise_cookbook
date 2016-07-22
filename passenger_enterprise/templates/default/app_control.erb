@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if (( ! $UID )) 
+then
+  echo "ERROR: This script must be run as a user, not as root." 2>&1
+	exit 1
+fi
+
+export HOME="/home/<%= @user %>"
+
+cd /data/<%= @app_name %>/
+
+case "$1" in
+
+  deploy)
+    /usr/bin/touch /data/<%= @app_name %>/current/tmp/restart.txt
+    ;;
+
+  stop)
+    /opt/passenger-enterprise-server-<%= @version %>/bin/passenger stop current --port <%= @port %> --pid-file /data/<%= @app_name %>/shared/pids/passenger.<%= @port %>.pid
+    ;;
+
+  start)
+    /opt/passenger-enterprise-server-<%= @version %>/bin/passenger start current --daemonize --port <%= @port %> --environment <%= @rails_env %> --max-pool-size <%= @worker_count %> --min-instances <%= @worker_count %> --rolling-restarts --resist-deployment-errors --pid-file /data/<%= @app_name %>/shared/pids/passenger.<%= @port %>.pid --log-file /data/<%= @app_name %>/shared/log/passenger.<%= @port %>.log
+    ;;
+
+  status)
+    /opt/passenger-enterprise-server-<%= @version %>/bin/passenger status current --port <%= @port %> --pid-file /data/<%= @app_name %>/shared/pids/passenger.<%= @port %>.pid
+    ;;
+
+  restart)
+    /opt/passenger-enterprise-server-<%= @version %>/bin/passenger stop current --port <%= @port %> --pid-file /data/<%= @app_name %>/shared/pids/passenger.<%= @port %>.pid
+    sleep 5
+    /opt/passenger-enterprise-server-<%= @version %>/bin/passenger start current --daemonize --port <%= @port %> --environment <%= @rails_env %> --max-pool-size <%= @worker_count %> --min-instances <%= @worker_count %> --rolling-restarts --resist-deployment-errors --pid-file /data/<%= @app_name %>/shared/pids/passenger.<%= @port %>.pid --log-file /data/<%= @app_name %>/shared/log/passenger.<%= @port %>.log 
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop|status|restart|deploy}"
+    exit 1
+    ;;
+
+esac
+
+exit 0
